@@ -187,12 +187,14 @@ def generate_report(animal_id: int, output_dir: str):
 @main.command()
 @click.option(
     "--animal-id",
+    "-a",
     type=int,
     required=True,
     help="Animal ID",
 )
 @click.option(
     "--session",
+    "-s",
     type=int,
     required=True,
     help="Session number",
