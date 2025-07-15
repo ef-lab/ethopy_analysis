@@ -16,6 +16,14 @@ Ethopy Analysis provides a modern, modular approach to behavioral data analysis 
 
 ### From Source (Development)
 
+Setting Up a Virtual Environment¶
+
+Before installing dependencies, it's recommended to use a virtual environment to keep your project isolated and manageable.
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+```
+installing dependencies:
 ```bash
 # Clone the repository
 git clone <repository-url>
