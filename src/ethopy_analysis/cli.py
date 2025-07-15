@@ -15,6 +15,7 @@ from .plots.animal import (
 from .db.schemas import get_schema
 from .data.analysis import get_performance
 from .data.loaders import get_sessions
+from .config.settings import get_config_summary
 
 
 @click.group()
@@ -210,6 +211,18 @@ def session_summary(animal_id: int, session: int):
         sys.exit(1)
 
 
+@main.command("config-summary")
+def config_summary():
+    """Display current configuration summary and source file path."""
+    try:
+        summary = get_config_summary()
+        click.echo(summary)
+        
+    except Exception as e:
+        click.echo(f"Error getting configuration summary: {str(e)}", err=True)
+        sys.exit(1)
+
+
 @main.command()
 def test_db_connection():
     """Test database connection."""
@@ -221,7 +234,7 @@ def test_db_connection():
         behavior = get_schema("behavior")
         stimulus = get_schema("stimulus")
 
-        click.echo("✓ Successfully connected to database")
+        click.echo("Successfully connected to database")
         click.echo(f"✓ Experiment schema: {experiment}")
         click.echo(f"✓ Behavior schema: {behavior}")
         click.echo(f"✓ Stimulus schema: {stimulus}")

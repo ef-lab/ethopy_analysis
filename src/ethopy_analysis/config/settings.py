@@ -257,26 +257,92 @@ def validate_config(config: Dict[str, Any]) -> bool:
     return is_valid
 
 
+def load_config_with_source(config_path: Optional[Union[str, Path]] = None) -> tuple[Dict[str, Any], Optional[Path]]:
+    """Load configuration and return both config and source file path.
+
+    Args:
+        config_path: Path to configuration file (optional)
+
+    Returns:
+        Tuple of (configuration dictionary, source file path or None)
+    """
+    # Start with default configuration
+    config = DEFAULT_CONFIG.copy()
+    config_source = None
+
+    # Try to load from file
+    if config_path:
+        config_file = Path(config_path)
+    else:
+        # Search for config file in common locations
+        config_file = find_config_file()
+
+    if config_file and config_file.exists():
+        try:
+            with open(config_file, "r") as f:
+                file_config = json.load(f)
+            # Merge file config with defaults
+            config = merge_configs(config, file_config)
+            config_source = config_file
+            logger.info(f"Loaded configuration from: {config_file}")
+
+        except Exception as e:
+            logger.warning(f"Failed to load config from {config_file}: {e}")
+            logger.info("Using default configuration")
+    else:
+        logger.info("No config file found, using defaults")
+
+    # Apply environment variable overrides
+    config = apply_env_overrides(config)
+
+    # Validate configuration
+    if not validate_config(config):
+        logger.warning("Configuration validation failed")
+
+    return config, config_source
+
+
 def get_config_summary() -> str:
     """Get a summary of the current configuration.
 
     Returns:
         String summary of configuration
     """
-    config = load_config()
+    config, config_source = load_config_with_source()
 
     summary = "Ethopy Analysis Configuration Summary:\n"
     summary += "=" * 50 + "\n"
+
+    # Configuration source
+    if config_source:
+        summary += f"Configuration file: {config_source}\n"
+    else:
+        summary += "Configuration file: Using defaults (no file found)\n"
+    
+    # Check for environment variable overrides
+    env_vars = ["DJ_HOST", "DJ_USER", "DJ_PASSWORD", "ETHOPY_OUTPUT_DIR"]
+    active_env_vars = [var for var in env_vars if var in os.environ]
+    if active_env_vars:
+        summary += f"Environment overrides: {', '.join(active_env_vars)}\n"
+    
+    summary += "\n"
 
     # Database info (without password)
     db_config = config["database"]
     summary += f"Database Host: {db_config.get('host', 'Not set')}\n"
     summary += f"Database User: {db_config.get('user', 'Not set')}\n"
+    password_status = "Set" if db_config.get('password') else "Not set"
+    summary += f"Database Password: {password_status}\n"
     summary += f"Schemas: {len(db_config.get('schemas', {}))}\n"
 
+    # List schema mappings
+    if db_config.get('schemas'):
+        summary += "Schema mappings:\n"
+        for schema_type, schema_name in db_config['schemas'].items():
+            summary += f"  {schema_type}: {schema_name}\n"
 
     # Paths info
     paths_config = config["paths"]
-    summary += f"Output Directory: {paths_config.get('output_dir', './output')}\n"
+    summary += f"\nOutput Directory: {paths_config.get('output_dir', './output')}\n"
 
     return summary
