@@ -19,6 +19,7 @@ from ethopy_analysis.data.loaders import (
 from ethopy_analysis.data.analysis import get_performance
 from ethopy_analysis.data.utils import group_by_conditions
 from ethopy_analysis.db.schemas import get_schema
+from ethopy_analysis.plots.utils import save_plot
 
 # Setup logger
 logger = logging.getLogger(__name__)
@@ -108,7 +109,7 @@ def plot_trials(trial_df: pd.DataFrame, params: Dict[str, Any], **kwargs) -> Non
     )
 
 
-def difficultyPlot(animal_id: int, session: int) -> None:
+def difficultyPlot(animal_id: int, session: int, save_path=None) -> None:
     """Create a comprehensive difficulty plot for an animal session.
 
     Generates a visualization showing trial outcomes (reward, punish, abort) across
@@ -222,7 +223,11 @@ def difficultyPlot(animal_id: int, session: int) -> None:
     ]
     plt.legend(handles=legend_elements, bbox_to_anchor=(1.04, 1), loc="upper left")
     # plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
-    plt.show()
+
+    if save_path:
+        save_plot(plt.gcf(), save_path)
+    else:
+        plt.show()
 
 
 def find_diff_trials(key_animal_session: Dict[str, Any], diff: int) -> Any:
@@ -285,6 +290,7 @@ def LickPlot(
     color_rew_pun: bool = False,
     difficulty: Optional[int] = None,
     period: Optional[str] = None,
+    save_path=None,
     **kwargs,
 ) -> Tuple[Any, Any]:
     """Generate lick plots for animal behavior analysis.
@@ -498,7 +504,12 @@ def LickPlot(
     plt.xlim(params["xlim"])
     fig.suptitle(key_animal_session)
     plt.legend(handles=legend_elements, bbox_to_anchor=(1.04, 1), loc="upper left")
-    plt.show()
+
+    if save_path:
+        save_plot(fig, save_path)
+    else:
+        plt.show()
+
     return selected_trials, cond
 
 
@@ -638,12 +649,13 @@ def plot_licks_state(
     session: int,
     check_state: str = "InterTrial",
     state_select: str = "Reward",
+    save_path=None,
     **kwargs,
 ) -> None:
     """Analyze licking behavior at specific states for selected trial types.
     Creates a histogram showing lick counts per port during a specified state,
     filtered to include only trials of a specific outcome type.
-    
+
     Args:
         animal_id: Unique identifier for the animal
         session: Session number or identifier
@@ -664,43 +676,52 @@ def plot_licks_state(
         time_id=select_state_df["trial_idx"].values,
         column="port",
     )
-    
+
     uniq_ports = licks_port["port"].unique()
-    
+
     # Calculate global min and max across all ports to create uniform bins
     all_event_counts = licks_port["event_count"].values
     global_min = all_event_counts.min()
     global_max = all_event_counts.max()
-    
+
     # Create uniform bins based on global range
     # You can adjust the number of bins as needed
-    num_bins = kwargs.pop('bins', 20)  # Default to 20 bins, but allow override
+    num_bins = kwargs.pop("bins", 20)  # Default to 20 bins, but allow override
     bins = np.linspace(global_min, global_max, num_bins + 1)
-    
+
     for port in uniq_ports:
         licks_per_port = licks_port.loc[licks_port["port"] == port]
         print(f"port: {port}")
         print(f" mean licks: {licks_per_port.event_count.mean()}")
         print(f" trials count: {len(licks_per_port)}")
-        
+
         # Use the same bins for all ports
         plt.hist(
-            licks_per_port["event_count"], 
-            bins=bins, 
-            alpha=0.5, 
-            label=f"port {port}", 
-            **kwargs
+            licks_per_port["event_count"],
+            bins=bins,
+            alpha=0.5,
+            label=f"port {port}",
+            **kwargs,
         )
-    
+
     plt.title(f"licks at State:{check_state} \nfor {state_select} trials")
     plt.legend()
     plt.xlabel("licks")
     plt.ylabel("#")
-    plt.show()
+
+    if save_path:
+        save_plot(plt.gcf(), save_path)
+    else:
+        plt.show()
 
 
 def plot_first_lick_after(
-    animal_id: int, session: int, state: str = "Response", sub_state: str = "", **kwargs
+    animal_id: int,
+    session: int,
+    state: str = "Response",
+    sub_state: str = "",
+    save_path=None,
+    **kwargs,
 ) -> pd.DataFrame:
     """Plot histogram of first lick times after a specific state.
 
@@ -747,7 +768,12 @@ def plot_first_lick_after(
     plt.xlabel("First Lick")
     plt.xlabel("time (ms)")
     plt.ylabel("#")
-    plt.show()
+
+    if save_path:
+        save_plot(plt.gcf(), save_path)
+    else:
+        plt.show()
+
     return f_lick_select
 
 
@@ -849,7 +875,7 @@ def valid_ready_state(
 
 
 def plot_valid_proximity_state(
-    animal_id: int, session: int, state: str = "Trial"
+    animal_id: int, session: int, state: str = "Trial", save_path=None
 ) -> None:
     """Plot histogram of valid proximity durations for a specific state.
 
@@ -866,7 +892,11 @@ def plot_valid_proximity_state(
     )
     plt.xlabel("time(ms)")
     plt.ylabel("#")
-    plt.show()
+
+    if save_path:
+        save_plot(plt.gcf(), save_path)
+    else:
+        plt.show()
 
 
 def calculate_proximity_duration(
@@ -901,7 +931,7 @@ def calculate_proximity_duration(
 
 
 def plot_proximities_dur(
-    animal_id: int, session: int, ports: List[int] = [], **kwargs
+    animal_id: int, session: int, ports: List[int] = [], save_path=None, **kwargs
 ) -> None:
     """Plot histogram of proximity durations.
 
@@ -920,7 +950,11 @@ def plot_proximities_dur(
     plt.title(f"Animal id {animal_id}, session: {session}\nPorts = {ports}")
     plt.xlabel("Proximity duration\n(on_time - off_time)")
     plt.ylabel("#")
-    plt.show()
+
+    if save_path:
+        save_plot(plt.gcf(), save_path)
+    else:
+        plt.show()
 
 
 def plot_trial_time(
@@ -929,6 +963,7 @@ def plot_trial_time(
     trials: List[int],
     display_tables: bool = True,
     port: int = 3,
+    save_path=None,
 ) -> Tuple[pd.DataFrame, pd.DataFrame, Any]:
     """Plot timeline of trial events including states, licks, and proximity.
 
@@ -999,10 +1034,14 @@ def plot_trial_time(
     plt.xlabel("time(ms)")
     plt.yticks([0.5, 1], ["proximity", "licks"])
     plt.title(f"Animal id:{animal_id}, session: {session} \ntrials: {trials}")
+
+    if save_path:
+        save_plot(plt.gcf(), save_path)
+
     return trial_states, trial_licks, trial_prox
 
 
-def liquidsPlot(animal_id: int, days: int = 15) -> None:
+def liquidsPlot(animal_id: int, days: int = 15, save_path=None) -> None:
     """plot liquid delivered per day
 
     Args:
@@ -1050,7 +1089,11 @@ def liquidsPlot(animal_id: int, days: int = 15) -> None:
     plt.xlabel("date")
     plt.xticks(rotation=45)
     plt.grid()
-    plt.show()
+
+    if save_path:
+        save_plot(plt.gcf(), save_path)
+    else:
+        plt.show()
 
 
 def roll_time(
@@ -1080,7 +1123,9 @@ def roll_time(
     return grouped.reindex(time_range, fill_value=0)
 
 
-def plot_states_in_time(animal_id: int, session: int, seconds: int = 30) -> None:
+def plot_states_in_time(
+    animal_id: int, session: int, seconds: int = 30, save_path=None
+) -> None:
     """Plot trial states over time.
 
     Args:
@@ -1108,8 +1153,13 @@ def plot_states_in_time(animal_id: int, session: int, seconds: int = 30) -> None
     plt.legend()
     plt.grid()
 
+    if save_path:
+        save_plot(plt.gcf(), save_path)
 
-def plot_licks_time(animal_id: int, session: int, bins: int = 50) -> None:
+
+def plot_licks_time(
+    animal_id: int, session: int, bins: int = 50, save_path=None
+) -> None:
     """Plot lick counts over time by port.
 
     Args:
@@ -1163,4 +1213,8 @@ def plot_licks_time(animal_id: int, session: int, bins: int = 50) -> None:
     plt.title("Lick Count by Time and Port")
     plt.legend()
     plt.grid(True, alpha=0.3)
-    plt.show()
+
+    if save_path:
+        save_plot(plt.gcf(), save_path)
+    else:
+        plt.show()

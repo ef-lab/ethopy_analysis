@@ -7,9 +7,10 @@ import numpy as np
 from ethopy_analysis.data.loaders import get_sessions
 from ethopy_analysis.data.analysis import get_performance, trials_per_session
 from ethopy_analysis.db.schemas import get_schema
+from ethopy_analysis.plots.utils import save_plot
 
 
-def plot_session_date(animal_id, min_trials=0):
+def plot_session_date(animal_id, min_trials=0, save_path=None):
     experiment = get_schema("experiment")
     animal_sessions_tc = get_sessions(
         animal_id, min_trials=min_trials, format="dj"
@@ -37,10 +38,16 @@ def plot_session_date(animal_id, min_trials=0):
     plt.ylabel("# sessions")
     plt.title(f"Animal id : {animal_id}")
     plt.grid()
+
+    if save_path:
+        save_plot(plt.gcf(), save_path)
+
     return session_same_date
 
 
-def plot_performance_liquid(animal_id, animal_sessions, xaxis="session"):
+def plot_performance_liquid(
+    animal_id, animal_sessions, xaxis="session", save_path=None
+):
     behavior = get_schema("behavior")
     sessions = animal_sessions["session"].values
     if len(sessions) == 0:
@@ -92,6 +99,9 @@ def plot_performance_liquid(animal_id, animal_sessions, xaxis="session"):
 
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
 
+    if save_path:
+        save_plot(fig, save_path)
+
 
 def find_uniq_pos(arr):
     uniq_starts = []
@@ -108,7 +118,7 @@ def find_uniq_pos(arr):
     return uniq_value, uniq_starts
 
 
-def plot_session_performance(animal_id, sessions, perf_func):
+def plot_session_performance(animal_id, sessions, perf_func, save_path=None):
     experiment = get_schema("experiment")
     protocols, color_layer = [], [0]
     task_session_dj = (
@@ -142,10 +152,14 @@ def plot_session_performance(animal_id, sessions, perf_func):
     plt.xlabel("Session _ids")
     plt.ylabel("Performace")
     plt.grid()
+
+    if save_path:
+        save_plot(plt.gcf(), save_path)
+
     return perfs
 
 
-def plot_trial_per_session(animal_id, min_trials=2):
+def plot_trial_per_session(animal_id, min_trials=2, save_path=None):
     animal_sessions_tc = trials_per_session(animal_id, min_trials)
     animal_id = animal_sessions_tc["animal_id"].iloc[0]
     plt.figure(figsize=(15, 5))
@@ -157,3 +171,6 @@ def plot_trial_per_session(animal_id, min_trials=2):
     plt.ylabel("# trials")
     plt.xlabel("session id")
     plt.grid()
+
+    if save_path:
+        save_plot(plt.gcf(), save_path)
