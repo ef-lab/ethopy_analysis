@@ -23,10 +23,6 @@ cd Visualisations
 
 # Install in development mode
 pip install -e .
-
-# Or install dependencies manually
-pip install -r Session/requirements.txt
-pip install click seaborn opencv-python
 ```
 
 ### Dependencies
