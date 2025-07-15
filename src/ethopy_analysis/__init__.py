@@ -10,7 +10,7 @@ This package provides tools for:
 Key modules:
 - data: Data loading and transformation functions
 - plots: Plotting functions that work with pandas DataFrames
-- db: Database connection and query utilities
+- db: Database connection
 - config: Configuration management
 """
 
@@ -18,6 +18,21 @@ __version__ = "0.1.0"
 __author__ = "Ethopy Analysis Contributors"
 
 
+# Convenient imports for common data functions
+from ethopy_analysis.data import (
+    get_sessions,
+    get_trials,
+    get_trial_states,
+    get_trial_experiment,
+    get_trial_behavior,
+    get_trial_stimulus,
+    get_trial_licks,
+    get_trial_proximities,
+    get_performance,
+    session_summary,
+)
+
+# Database and configuration functions
 from ethopy_analysis.db.schemas import (
     get_schema,
     get_all_schemas,
@@ -33,27 +48,29 @@ from ethopy_analysis.config.settings import (
 from ethopy_analysis.data import loaders
 from ethopy_analysis.plots import animal
 from ethopy_analysis.db import schemas
-from temp_old_files import session_olf
 
 __all__ = [
-    # High-level data loading functions
-    "load_session_data",
-    "load_animal_data",
-    "load_complete_session_data",
+    # Data loading functions
+    "get_sessions",
+    "get_trials",
+    "get_trial_states",
+    "get_trial_experiment",
+    "get_trial_behavior",
+    "get_trial_stimulus",
+    "get_trial_licks",
+    "get_trial_proximities",
+    # Analysis functions
+    "get_performance",
+    "session_summary",
     # Database schema access
-    "get_experiment_tables",
-    "get_behavior_tables",
-    "get_stimulus_tables",
     "get_schema",
     "get_all_schemas",
     # Utility functions
     "test_connection",
-    "clear_database_cache",
     "load_config",
     "get_config_summary",
     # Modules for advanced users
     "loaders",
     "animal",
-    "session_olf",
     "schemas",
 ]

@@ -26,11 +26,7 @@ from .session import (
     plot_states_in_time,
     plot_licks_time
 )
-from .comparison import (
-    plot_animals_comparison,
-    plot_protocol_comparison,
-    plot_difficulty_analysis,
-)
+
 from .utils import validate_dataframe, create_figure
 
 __all__ = [
@@ -53,10 +49,6 @@ __all__ = [
     "liquidsPlot",
     "plot_states_in_time",
     "plot_licks_time",
-    # Comparison plots
-    "plot_animals_comparison",
-    "plot_protocol_comparison",
-    "plot_difficulty_analysis",
     # Utilities
     "validate_dataframe",
     "create_figure",

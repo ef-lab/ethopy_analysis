@@ -4,7 +4,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-from ethopy_analysis.db.queries import get_performance, get_sessions, trials_per_session
+from ethopy_analysis.data.loaders import get_sessions
+from ethopy_analysis.data.analysis import get_performance, trials_per_session
 from ethopy_analysis.db.schemas import get_schema
 
 

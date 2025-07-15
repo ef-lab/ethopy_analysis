@@ -1,13 +1,79 @@
 """
-Utility functions for database operations and data processing.
+Data utility functions for Ethopy analysis.
 
-This module contains helper functions that are used across the database
-query functions but are not specific to any particular data retrieval operation.
+This module provides utility functions for data manipulation, processing,
+and various helper functions used across the analysis pipeline.
 """
 
 from typing import List, Tuple, Dict, Any, Optional, Union
 import pandas as pd
+import numpy as np
+from ethopy_analysis.db.schemas import get_schema
 from functools import reduce
+
+
+def combine_children_tables(children: List[Any]) -> Any:
+    """
+    Combine multiple DataJoint child tables using the join operator.
+
+    Args:
+        children (List[Any]): List of DataJoint table objects to combine
+
+    Returns:
+        Any: Combined DataJoint expression
+
+    Note:
+        This function uses the reduce function with the DataJoint multiplication operator
+        to progressively join all child tables together.
+    """
+    return reduce(lambda x, y: x * y, children)
+
+def find_combination(states_df: pd.DataFrame, state: str = "PreTrial") -> str:
+    """
+    Find the next state after the specified state in a trial sequence.
+
+    Args:
+        states_df (pd.DataFrame): DataFrame containing trial states with 'state' column
+        state (str, optional): The state to find the next state after. Defaults to "PreTrial".
+
+    Returns:
+        str: The state that follows the specified state, or "None" if:
+            - The specified state is not found in the trial
+            - "Offtime" is present in the trial states
+            - The specified state is the last state in the sequence
+
+    Raises:
+        IndexError: If the specified state is the last state in the sequence
+    """
+    trial_states = states_df["state"].values
+    if state not in trial_states:
+        return "None"
+    if "Offtime" in trial_states:
+        return "None"
+    idx = np.where(trial_states == state)[0][0]
+    if idx + 1 >= len(trial_states):
+        return "None"
+    return trial_states[idx + 1]
+
+
+def get_setup(setup: str) -> Tuple[int, int]:
+    """
+    Retrieve animal_id and session for a given setup.
+
+    Args:
+        setup (str): The setup identifier
+
+    Returns:
+        Tuple[int, int]: A tuple containing (animal_id, session)
+
+    Raises:
+        IndexError: If no setup found with the given identifier
+    """
+    experiment = get_schema("experiment")
+    setup_data = (
+        (experiment.Control & f'setup="{setup}"').fetch(format="frame").reset_index()
+    )
+    return int(setup_data["animal_id"].values[0]), int(setup_data["session"].values[0])
 
 
 def check_hashable_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
@@ -36,23 +102,6 @@ def check_hashable_columns(df: pd.DataFrame) -> Tuple[List[str], List[str]]:
             non_hashable_cols.append(col)
 
     return hashable_cols, non_hashable_cols
-
-
-def combine_children_tables(children: List[Any]) -> Any:
-    """
-    Combine multiple DataJoint child tables using the join operator.
-
-    Args:
-        children (List[Any]): List of DataJoint table objects to combine
-
-    Returns:
-        Any: Combined DataJoint expression
-
-    Note:
-        This function uses the reduce function with the DataJoint multiplication operator
-        to progressively join all child tables together.
-    """
-    return reduce(lambda x, y: x * y, children)
 
 
 def group_trials(df: pd.DataFrame) -> pd.DataFrame:

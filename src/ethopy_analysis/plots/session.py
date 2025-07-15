@@ -9,16 +9,16 @@ import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
 
-from ethopy_analysis.db.queries import (
-    get_performance,
+from ethopy_analysis.data.loaders import (
     get_trial_behavior,
     get_trial_experiment,
     get_trial_licks,
     get_trial_proximities,
     get_trial_states,
 )
+from ethopy_analysis.data.analysis import get_performance
+from ethopy_analysis.data.utils import group_by_conditions
 from ethopy_analysis.db.schemas import get_schema
-from ethopy_analysis.db.utils import group_by_conditions
 
 # Setup logger
 logger = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ def perf_difficulty(animal_id: int, session: int) -> Tuple[List, List]:
 
     diffs_perf = []
     for diff, trial_idxs in zip(uniq_diffs, trials_by_diff["trial_indices"]):
-        perf = get_performance(trial_states_df, trials=trial_idxs)
+        perf = get_performance(animal_id, session, trials=trial_idxs)
         diffs_perf.append(float(perf))
         logger.debug(f"Difficulty {diff}: performance {perf:.2f}")
         print(f"difficulty {diff}: performance {perf:.2f}")
@@ -641,10 +641,9 @@ def plot_licks_state(
     **kwargs,
 ) -> None:
     """Analyze licking behavior at specific states for selected trial types.
-
     Creates a histogram showing lick counts per port during a specified state,
     filtered to include only trials of a specific outcome type.
-
+    
     Args:
         animal_id: Unique identifier for the animal
         session: Session number or identifier
@@ -658,7 +657,6 @@ def plot_licks_state(
     select_trials_df = select_trials(states_df, state_select)
     select_state_df = select_trials_df.loc[select_trials_df["state"] == check_state]
     licks_df = get_trial_licks(animal_id, session)
-
     licks_port = group_column_times(
         licks_df,
         select_state_df["start_time"].values,
@@ -666,16 +664,34 @@ def plot_licks_state(
         time_id=select_state_df["trial_idx"].values,
         column="port",
     )
+    
     uniq_ports = licks_port["port"].unique()
+    
+    # Calculate global min and max across all ports to create uniform bins
+    all_event_counts = licks_port["event_count"].values
+    global_min = all_event_counts.min()
+    global_max = all_event_counts.max()
+    
+    # Create uniform bins based on global range
+    # You can adjust the number of bins as needed
+    num_bins = kwargs.pop('bins', 20)  # Default to 20 bins, but allow override
+    bins = np.linspace(global_min, global_max, num_bins + 1)
+    
     for port in uniq_ports:
         licks_per_port = licks_port.loc[licks_port["port"] == port]
         print(f"port: {port}")
-        print(f"    mean licks: {licks_per_port.event_count.mean()}")
-        print(f"    trials count: {len(licks_per_port)}")
+        print(f" mean licks: {licks_per_port.event_count.mean()}")
+        print(f" trials count: {len(licks_per_port)}")
+        
+        # Use the same bins for all ports
         plt.hist(
-            licks_per_port["event_count"], alpha=0.5, label=f"port {port}", **kwargs
+            licks_per_port["event_count"], 
+            bins=bins, 
+            alpha=0.5, 
+            label=f"port {port}", 
+            **kwargs
         )
-
+    
     plt.title(f"licks at State:{check_state} \nfor {state_select} trials")
     plt.legend()
     plt.xlabel("licks")

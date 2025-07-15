@@ -8,7 +8,6 @@ JSON files, environment variables, and direct parameters.
 from .settings import (
     load_config,
     get_database_config,
-    get_plot_config,
     set_default_config,
 )
 
@@ -20,7 +19,6 @@ from .interactive import (
 __all__ = [
     "load_config",
     "get_database_config",
-    "get_plot_config",
     "set_default_config",
     "setup_configuration_interactive",
     "get_database_config_interactive",
