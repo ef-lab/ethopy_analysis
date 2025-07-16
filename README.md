@@ -43,57 +43,6 @@ pip install -e .
 - datajoint >= 0.13.0 (for database access)
 - click >= 8.0.0 (for CLI)
 
-## Quick Start
-
-### 1. Basic Usage with Your Data
-
-```python
-import pandas as pd
-from ethopy_analysis.plots.animal import plot_animal_performance
-
-# Your data (any pandas DataFrame with the right columns)
-performance_data = pd.DataFrame({
-    'animal_id': [101, 101, 101],
-    'session': [1, 2, 3],
-    'correct_rate': [0.4, 0.6, 0.8],
-    'total_trials': [50, 60, 55]
-})
-
-# Create plot with one function call
-fig, ax = plot_animal_performance(performance_data, animal_id=101)
-```
-
-### 2. Loading from Ethopy Database
-
-```python
-from ethopy_analysis.data.loaders import get_sessions, get_trial_states
-from ethopy_analysis.data.analysis import get_performance
-
-# Load data directly from database
-sessions_df = get_sessions(animal_id=123, from_date="2023-01-01", to_date="2023-12-31")
-trial_states_df = get_trial_states(animal_id=123, session=1)
-performance = get_performance(animal_id=123, session=1)
-
-# Or use convenience imports
-from ethopy_analysis import get_sessions, get_trial_states, get_performance
-```
-
-### 3. Command Line Interface
-
-```bash
-# Analyze a specific animal
-ethopy-analysis analyze-animal --animal-id 123 --save-plots
-
-# Compare multiple animals  
-ethopy-analysis compare-animals --animal-ids "123,124,125"
-
-# Generate comprehensive report
-ethopy-analysis generate-report --animal-id 123
-
-# Test database connection
-ethopy-analysis test-db-connection
-```
-
 ## Package Structure
 
 ```
@@ -164,6 +113,7 @@ export DJ_PASSWORD="your_password"
 
 Check out the `examples/` directory for comprehensive notebooks:
 
+- **`load_example.ipynb`**: Comprehensive animal-level analysis
 - **`animal_analysis_example.ipynb`**: Comprehensive animal-level analysis
 - **`session_analysis_example.ipynb`**: Detailed session-level analysis
 
