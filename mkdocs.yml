@@ -4,7 +4,7 @@ site_author: Ethopy Analysis Team
 site_url: https://ethopy-analysis.readthedocs.io
 
 repo_name: ethopy_analysis
-repo_url: https://github.com/your-org/ethopy_analysis
+repo_url: https://github.com/ef-lab/ethopy_analysis
 
 theme:
   name: material
@@ -71,4 +71,4 @@ markdown_extensions:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/your-org/ethopy_analysis
+      link: https://github.com/ef-lab/ethopy_analysis
