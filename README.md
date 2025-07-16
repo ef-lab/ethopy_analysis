@@ -59,7 +59,6 @@ ethopy-analysis/
 │   │   └── utils.py            # Plotting utilities and plugin system
 │   ├── db/                     # Database connectivity
 │   │   ├── schemas.py          # Database schema management
-│   │   ├── queries.py          # Complex database operations
 │   │   └── utils.py            # Database utility functions
 │   ├── config/                 # Configuration management
 │   │   └── settings.py         # Configuration loading and validation
