@@ -56,10 +56,10 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/your-org/ethopy-analysis"
-Repository = "https://github.com/your-org/ethopy-analysis"
-Documentation = "https://your-org.github.io/ethopy-analysis"
-"Bug Tracker" = "https://github.com/your-org/ethopy-analysis/issues"
+Homepage = "https://github.com/ef-lab/ethopy_analysis"
+Repository = "https://github.com/ef-lab/ethopy_analysis"
+Documentation = "https://ef-lab.github.io/ethopy_analysis"
+"Bug Tracker" = "https://github.com/ef-lab/ethopy_analysis/issues"
 
 [project.scripts]
 ethopy-analysis = "ethopy_analysis.cli:main"
