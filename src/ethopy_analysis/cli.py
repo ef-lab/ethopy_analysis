@@ -15,7 +15,7 @@ from .plots.animal import (
 from .db.schemas import get_schema
 from .data.analysis import get_performance
 from .data.loaders import get_sessions
-from .config.settings import get_config_summary
+from .config.settings import get_config_summary, DEFAULT_CONFIG, save_config
 
 
 @click.group()
@@ -220,6 +220,61 @@ def config_summary():
         
     except Exception as e:
         click.echo(f"Error getting configuration summary: {str(e)}", err=True)
+        sys.exit(1)
+
+
+@main.command()
+@click.option(
+    "--output-path",
+    type=click.Path(dir_okay=False, file_okay=True),
+    default="config.json",
+    help="Output path for configuration file (default: config.json)",
+)
+@click.option(
+    "--template-only",
+    is_flag=True,
+    help="Create template config without prompting for values",
+)
+def create_config(output_path: str, template_only: bool):
+    """Create a new configuration file."""
+    try:
+        config = DEFAULT_CONFIG.copy()
+        
+        if not template_only:
+            click.echo("Creating new configuration file...")
+            click.echo("Enter database connection details (leave blank for defaults):")
+            
+            # Get database configuration
+            host = click.prompt("Database host", default="", show_default=False)
+            if host:
+                config["database"]["host"] = host
+            
+            user = click.prompt("Database user", default="", show_default=False)
+            if user:
+                config["database"]["user"] = user
+            
+            password = click.prompt("Database password", default="", hide_input=True, show_default=False)
+            if password:
+                config["database"]["password"] = password
+            
+            # Schema mappings
+            click.echo("\nSchema mappings (press Enter to use defaults):")
+            for schema_type in ["experiment", "stimulus", "behavior"]:
+                current_default = config["database"]["schemas"][schema_type]
+                schema_name = click.prompt(f"{schema_type} schema", default=current_default, show_default=True)
+                config["database"]["schemas"][schema_type] = schema_name
+        
+        # Save configuration
+        save_config(config, output_path)
+        
+        click.echo(f"Configuration file created: {output_path}")
+        if not template_only:
+            click.echo("You can now modify this file or use environment variables to override settings.")
+        else:
+            click.echo("Template configuration created. Edit the file to add your database credentials.")
+            
+    except Exception as e:
+        click.echo(f"Error creating configuration: {str(e)}", err=True)
         sys.exit(1)
 
 
