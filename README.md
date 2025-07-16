@@ -42,7 +42,6 @@ pip install -e .
 - plotly >= 5.0.0
 - datajoint >= 0.13.0 (for database access)
 - click >= 8.0.0 (for CLI)
-- opencv-python >= 4.5.0 (for video analysis)
 
 ## Quick Start
 
