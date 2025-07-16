@@ -118,4 +118,4 @@ strict_equality = true
 [tool.setuptools_scm]
 write_to = "src/ethopy_analysis/_version.py"
 version_scheme = "post-release"
-local_scheme = "node-and-date"
+local_scheme = "no-local-version"
