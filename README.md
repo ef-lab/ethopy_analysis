@@ -117,7 +117,7 @@ ethopy-analysis/
 │   │   └── settings.py         # Configuration loading and validation
 │   └── cli.py                  # Command-line interface
 ├── examples/                   # Example notebooks and scripts
-│   ├── quickstart_example.ipynb
+│   ├── load_example.ipynb
 │   ├── animal_analysis_example.ipynb
 │   └── session_analysis_example.ipynb
 ├── pyproject.toml              # Package configuration
