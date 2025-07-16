@@ -8,6 +8,9 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write          # Required for creating releases
+      id-token: write         # Required for PyPI trusted publishing (optional)
     
     steps:
     - name: Checkout code
