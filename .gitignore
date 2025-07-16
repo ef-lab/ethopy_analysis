@@ -1,4 +1,5 @@
 /temp
+_version.py
 
 # avoid commit of any Configuration file
 *.json
