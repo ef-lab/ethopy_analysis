@@ -305,166 +305,57 @@ mkdocs serve
 - Update API reference for new functions
 - Test documentation builds locally
 
-## Release Process & PyPI Publishing
+## CI/CD and Automation
 
-### Version Management Strategy
+### GitHub Actions Workflows
 
-This package uses **setuptools_scm** for automatic version management based on Git tags. This means:
+We use GitHub Actions for automated testing, building, and deployment.
 
-- Version numbers are automatically generated from Git tags
-- No manual version updates in `pyproject.toml`
-- Consistent versioning across releases
-- Development versions include commit hashes
+#### Release Workflow (`.github/workflows/release.yml`)
+**Triggers**: Push tags matching `v*.*.*`
+**Actions**:
+- Builds package with setuptools_scm
+- Uploads to PyPI with API token
+- Creates GitHub release with changelog
+- Tests installation
 
-### Automated PyPI Publishing
+**Setup**: Add `PYPI_API_TOKEN` to repository secrets
 
-We use GitHub Actions for automated publishing to PyPI when version tags are pushed.
+#### Documentation Workflow (`.github/workflows/docs.yml`)
+**Triggers**: Push to main branch
+**Actions**:
+- Builds MkDocs documentation
+- Deploys to GitHub Pages
 
-#### Setup Requirements
+**Setup**: Enable GitHub Pages with "GitHub Actions" source
 
-1. **PyPI Account**: Create account at https://pypi.org
-2. **API Token**: Generate API token in PyPI account settings
-3. **GitHub Secrets**: Add `PYPI_API_TOKEN` to repository secrets
+### Release Process
 
-#### Release Workflow
+1. **Update CHANGELOG.md** with new version section
+2. **Commit changes**: `git commit -m "docs: update changelog for v1.0.0"`
+3. **Create tag**: `git tag v1.0.0 && git push origin v1.0.0`
+4. **Monitor workflows**: Check GitHub Actions for success
 
-1. **Prepare Release**
-   ```bash
-   # Ensure all changes are committed
-   git add -A
-   git commit -m "feat: prepare release v1.0.0"
-   git push origin main
-   ```
+### Version Management
 
-2. **Create and Push Tag**
-   ```bash
-   # Create version tag (triggers automated release)
-   git tag v1.0.0
-   git push origin v1.0.0
-   ```
+Uses **setuptools_scm** for automatic versioning:
+- Version from Git tags (e.g., `v1.0.0` → `1.0.0`)
+- Development versions include commit hash
+- No manual version updates needed
 
-3. **Automated Actions**
-   - GitHub Actions workflow triggers
-   - Package is built and tested
-   - Published to PyPI automatically
-   - GitHub release is created
+### Troubleshooting
 
-#### Version Numbering
+**Common Issues**:
+- **403 GitHub release error**: Add `permissions: contents: write` to workflow
+- **PyPI upload fails**: Check API token in repository secrets
+- **Version conflicts**: Ensure tag doesn't already exist
 
-Follow semantic versioning (semver):
-- **Major** (v1.0.0): Breaking changes
-- **Minor** (v1.1.0): New features, backward compatible
-- **Patch** (v1.1.1): Bug fixes, backward compatible
-
-#### Pre-release Versions
-
-For development releases:
+**Recovery**:
 ```bash
-# Alpha release
-git tag v1.0.0a1
-git push origin v1.0.0a1
-
-# Beta release
-git tag v1.0.0b1
-git push origin v1.0.0b1
-
-# Release candidate
-git tag v1.0.0rc1
-git push origin v1.0.0rc1
-```
-
-### Manual Publishing (Backup Method)
-
-If automated publishing fails, use manual method:
-
-```bash
-# Install build tools
-pip install build twine
-
-# Build package
-python -m build
-
-# Upload to PyPI
-twine upload dist/*
-
-# Clean up
-rm -rf dist/ build/ *.egg-info
-```
-
-### Pre-release Checklist
-
-Before creating a release tag:
-
-- [ ] All features tested and working
-- [ ] Code style checks pass (`ruff check src/`)
-- [ ] Documentation builds correctly (`mkdocs build`)
-- [ ] Examples work with current code
-- [ ] CHANGELOG.md updated with changes
-- [ ] GitHub Actions workflow exists and is configured
-- [ ] PyPI API token is set in GitHub secrets
-
-### Testing Releases
-
-Use TestPyPI for testing:
-
-1. **Add TestPyPI token** to GitHub secrets as `TEST_PYPI_API_TOKEN`
-2. **Create test release** with pre-release tag:
-   ```bash
-   git tag v1.0.0rc1
-   git push origin v1.0.0rc1
-   ```
-3. **Test installation**:
-   ```bash
-   pip install -i https://test.pypi.org/simple/ ethopy-analysis
-   ```
-
-### Post-Release Tasks
-
-After successful release:
-
-1. **Verify PyPI listing**: Check https://pypi.org/project/ethopy-analysis/
-2. **Test installation**: `pip install ethopy-analysis`
-3. **Update documentation**: Ensure docs reflect latest version
-4. **Announce release**: Update README, notify users
-
-### Troubleshooting Releases
-
-**Common Issues:**
-
-1. **Build failures**: Check GitHub Actions logs
-2. **PyPI upload errors**: Verify API token is correct
-3. **Version conflicts**: Ensure tag doesn't already exist
-4. **Missing files**: Check `MANIFEST.in` for included files
-
-**Recovery:**
-
-```bash
-# Delete problematic tag
+# Delete problematic tag and retry
 git tag -d v1.0.0
 git push origin --delete v1.0.0
-
-# Fix issues and re-tag
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-### Package Distribution
-
-After release, package is available:
-
-- **PyPI**: `pip install ethopy-analysis`
-- **GitHub Releases**: Download source/wheel files
-- **Documentation**: Auto-deployed to GitHub Pages
-
-### Version History
-
-Check version history:
-```bash
-# Current version
-python -c "import ethopy_analysis; print(ethopy_analysis.__version__)"
-
-# Available versions on PyPI
-pip index versions ethopy-analysis
+git tag v1.0.0 && git push origin v1.0.0
 ```
 
 ## Common Development Tasks
