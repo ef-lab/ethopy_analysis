@@ -34,7 +34,7 @@ def get_sessions(
                                  Session expression if format="dj"
     """
     from .analysis import trials_per_session
-    
+
     experiment = get_schema("experiment")
 
     animal_session_tmt = experiment.Session & {"animal_id": animal_id}
@@ -275,7 +275,9 @@ def get_trial_licks(
     return lick_dj.fetch(format="frame").reset_index()
 
 
-def get_trial_proximities(animal_id, session, ports: Optional[List] = None, format="df"):
+def get_trial_proximities(
+    animal_id, session, ports: Optional[List] = None, format="df"
+):
     """
     Retrieve proximity sensor data for a specific animal session.
 
@@ -356,7 +358,7 @@ def get_session_duration(animal_id: int, session: int) -> Optional[str]:
                       or None if no state times found
     """
     from .utils import convert_ms_to_time
-    
+
     experiment = get_schema("experiment")
     state_times = (
         experiment.Trial.StateOnset & {"animal_id": animal_id, "session": session}
