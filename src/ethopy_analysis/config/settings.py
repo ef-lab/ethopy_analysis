@@ -29,11 +29,12 @@ DEFAULT_CONFIG = {
 }
 
 
-def load_config(config_path: Optional[Union[str, Path]] = None) -> Dict[str, Any]:
+def load_config(config_path: Optional[Union[str, Path]] = None, display_path: Optional[bool] = None) -> Dict[str, Any]:
     """Load configuration from file or use defaults.
 
     Args:
         config_path: Path to configuration file (optional)
+        display_path: Whether to display the config path (optional)
 
     Returns:
         Configuration dictionary
@@ -54,6 +55,8 @@ def load_config(config_path: Optional[Union[str, Path]] = None) -> Dict[str, Any
                 file_config = json.load(f)
             # Merge file config with defaults
             config = merge_configs(config, file_config)
+            if display_path:
+                print(f"Configuration loaded from: {config_file}")
             logger.info(f"Loaded configuration from: {config_file}")
 
         except Exception as e:
