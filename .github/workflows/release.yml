@@ -1,0 +1,108 @@
+name: Release and Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0, v1.2.3, etc.
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Needed for setuptools_scm to work properly
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine setuptools_scm
+
+    - name: Verify version from tag
+      run: |
+        echo "Tag: ${{ github.ref_name }}"
+        echo "Expected version: ${GITHUB_REF_NAME#v}"
+        python -c "import setuptools_scm; print(f'Computed version: {setuptools_scm.get_version()}')"
+
+    - name: Build package
+      run: |
+        python -m build
+
+    - name: Check distribution files
+      run: |
+        ls -la dist/
+        twine check dist/*
+
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        twine upload dist/*
+
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: Release ${{ github.ref_name }}
+        body: |
+          ## Changes in ${{ github.ref_name }}
+          
+          See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details.
+          
+          ## Installation
+          
+          ```bash
+          pip install ethopy-analysis==${{ github.ref_name }}
+          ```
+          
+          ## What's Changed
+          
+          - Check the commit history and pull requests for detailed changes
+          - Full documentation available at the project homepage
+          
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/v0.1.0...${{ github.ref_name }}
+        draft: false
+        prerelease: ${{ contains(github.ref_name, 'a') || contains(github.ref_name, 'b') || contains(github.ref_name, 'rc') }}
+
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/ethopy_analysis-${{ github.ref_name }}.tar.gz
+        asset_name: ethopy_analysis-${{ github.ref_name }}.tar.gz
+        asset_content_type: application/gzip
+
+  test-install:
+    needs: build-and-publish
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    - name: Wait for PyPI to update
+      run: sleep 60
+
+    - name: Test installation from PyPI
+      run: |
+        pip install ethopy-analysis==${{ github.ref_name }}
+        python -c "import ethopy_analysis; print(f'Successfully installed version: {ethopy_analysis.__version__}')"
+
+    - name: Test CLI
+      run: |
+        ethopy-analysis --help
+        ethopy-analysis --version

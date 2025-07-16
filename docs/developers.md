@@ -305,23 +305,167 @@ mkdocs serve
 - Update API reference for new functions
 - Test documentation builds locally
 
-## Release Process
+## Release Process & PyPI Publishing
 
-### Version Updates
+### Version Management Strategy
+
+This package uses **setuptools_scm** for automatic version management based on Git tags. This means:
+
+- Version numbers are automatically generated from Git tags
+- No manual version updates in `pyproject.toml`
+- Consistent versioning across releases
+- Development versions include commit hashes
+
+### Automated PyPI Publishing
+
+We use GitHub Actions for automated publishing to PyPI when version tags are pushed.
+
+#### Setup Requirements
+
+1. **PyPI Account**: Create account at https://pypi.org
+2. **API Token**: Generate API token in PyPI account settings
+3. **GitHub Secrets**: Add `PYPI_API_TOKEN` to repository secrets
+
+#### Release Workflow
+
+1. **Prepare Release**
+   ```bash
+   # Ensure all changes are committed
+   git add -A
+   git commit -m "feat: prepare release v1.0.0"
+   git push origin main
+   ```
+
+2. **Create and Push Tag**
+   ```bash
+   # Create version tag (triggers automated release)
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+3. **Automated Actions**
+   - GitHub Actions workflow triggers
+   - Package is built and tested
+   - Published to PyPI automatically
+   - GitHub release is created
+
+#### Version Numbering
+
+Follow semantic versioning (semver):
+- **Major** (v1.0.0): Breaking changes
+- **Minor** (v1.1.0): New features, backward compatible
+- **Patch** (v1.1.1): Bug fixes, backward compatible
+
+#### Pre-release Versions
+
+For development releases:
 ```bash
-# Update version in pyproject.toml
-# Update CHANGELOG.md
-# Create git tag
-git tag -a v0.2.0 -m "Release version 0.2.0"
-git push origin v0.2.0
+# Alpha release
+git tag v1.0.0a1
+git push origin v1.0.0a1
+
+# Beta release
+git tag v1.0.0b1
+git push origin v1.0.0b1
+
+# Release candidate
+git tag v1.0.0rc1
+git push origin v1.0.0rc1
+```
+
+### Manual Publishing (Backup Method)
+
+If automated publishing fails, use manual method:
+
+```bash
+# Install build tools
+pip install build twine
+
+# Build package
+python -m build
+
+# Upload to PyPI
+twine upload dist/*
+
+# Clean up
+rm -rf dist/ build/ *.egg-info
 ```
 
 ### Pre-release Checklist
-- [ ] Code style checks pass
-- [ ] Documentation builds correctly
+
+Before creating a release tag:
+
+- [ ] All features tested and working
+- [ ] Code style checks pass (`ruff check src/`)
+- [ ] Documentation builds correctly (`mkdocs build`)
 - [ ] Examples work with current code
-- [ ] Version updated in pyproject.toml
-- [ ] CHANGELOG.md updated
+- [ ] CHANGELOG.md updated with changes
+- [ ] GitHub Actions workflow exists and is configured
+- [ ] PyPI API token is set in GitHub secrets
+
+### Testing Releases
+
+Use TestPyPI for testing:
+
+1. **Add TestPyPI token** to GitHub secrets as `TEST_PYPI_API_TOKEN`
+2. **Create test release** with pre-release tag:
+   ```bash
+   git tag v1.0.0rc1
+   git push origin v1.0.0rc1
+   ```
+3. **Test installation**:
+   ```bash
+   pip install -i https://test.pypi.org/simple/ ethopy-analysis
+   ```
+
+### Post-Release Tasks
+
+After successful release:
+
+1. **Verify PyPI listing**: Check https://pypi.org/project/ethopy-analysis/
+2. **Test installation**: `pip install ethopy-analysis`
+3. **Update documentation**: Ensure docs reflect latest version
+4. **Announce release**: Update README, notify users
+
+### Troubleshooting Releases
+
+**Common Issues:**
+
+1. **Build failures**: Check GitHub Actions logs
+2. **PyPI upload errors**: Verify API token is correct
+3. **Version conflicts**: Ensure tag doesn't already exist
+4. **Missing files**: Check `MANIFEST.in` for included files
+
+**Recovery:**
+
+```bash
+# Delete problematic tag
+git tag -d v1.0.0
+git push origin --delete v1.0.0
+
+# Fix issues and re-tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+### Package Distribution
+
+After release, package is available:
+
+- **PyPI**: `pip install ethopy-analysis`
+- **GitHub Releases**: Download source/wheel files
+- **Documentation**: Auto-deployed to GitHub Pages
+
+### Version History
+
+Check version history:
+```bash
+# Current version
+python -c "import ethopy_analysis; print(ethopy_analysis.__version__)"
+
+# Available versions on PyPI
+pip index versions ethopy-analysis
+```
 
 ## Common Development Tasks
 

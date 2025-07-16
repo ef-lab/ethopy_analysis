@@ -14,7 +14,16 @@ Key modules:
 - config: Configuration management
 """
 
-__version__ = "0.1.0"
+try:
+    from ._version import __version__
+except ImportError:
+    # Fallback for development installations
+    try:
+        from setuptools_scm import get_version
+        __version__ = get_version(root='../..', relative_to=__file__)
+    except ImportError:
+        __version__ = "unknown"
+
 __author__ = "Ethopy Analysis Contributors"
 
 

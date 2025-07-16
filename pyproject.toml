@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=61.0", "setuptools_scm>=6.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ethopy-analysis"
-version = "0.1.0"
+dynamic = ["version"]
 description = "Data analysis and visualization package for Ethopy behavioral experiments"
 readme = "README.md"
 license = {text = "MIT"}
@@ -115,3 +115,8 @@ warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
 strict_equality = true
+
+[tool.setuptools_scm]
+write_to = "src/ethopy_analysis/_version.py"
+version_scheme = "post-release"
+local_scheme = "node-and-date"
