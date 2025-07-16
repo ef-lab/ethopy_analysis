@@ -1,7 +1,7 @@
 site_name: Ethopy Analysis
 site_description: Comprehensive Python package for analyzing behavioral data from Ethopy experiments
 site_author: Ethopy Analysis Team
-site_url: https://ethopy-analysis.readthedocs.io
+site_url: https://ef-lab.github.io/ethopy_analysis
 
 repo_name: ethopy_analysis
 repo_url: https://github.com/ef-lab/ethopy_analysis
