@@ -31,7 +31,7 @@ installing dependencies:
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd Visualisations
+cd ethopy_analysis
 
 # Install in development mode
 pip install -e .
