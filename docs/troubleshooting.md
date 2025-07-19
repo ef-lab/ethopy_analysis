@@ -180,27 +180,6 @@ except ImportError as e:
     print(f"Missing dependency: {e}")
 ```
 
-### DataFrame Column Errors
-
-**Problem**: KeyError for required columns
-
-**Solutions**:
-```python
-# Check DataFrame structure
-print(df.columns.tolist())
-print(df.dtypes)
-
-# Verify required columns exist
-required_cols = ['animal_id', 'session', 'correct_rate']
-missing_cols = [col for col in required_cols if col not in df.columns]
-print(f"Missing columns: {missing_cols}")
-
-# Use data loading functions
-from ethopy_analysis.data.loaders import get_sessions
-sessions = get_sessions(animal_id=123)
-print(sessions.columns.tolist())
-```
-
 ### Plotting Errors
 
 **Problem**: Matplotlib or plotting function errors

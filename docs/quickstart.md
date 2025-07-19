@@ -4,25 +4,7 @@ Get started with Ethopy Analysis in just a few steps.
 
 ## Basic Usage
 
-### 1. Simple Analysis with Your Data
-
-```python
-import pandas as pd
-from ethopy_analysis.plots.animal import plot_animal_performance
-
-# Your data (any pandas DataFrame with the right columns)
-performance_data = pd.DataFrame({
-    'animal_id': [101, 101, 101],
-    'session': [1, 2, 3],
-    'correct_rate': [0.4, 0.6, 0.8],
-    'total_trials': [50, 60, 55]
-})
-
-# Create plot
-fig, ax = plot_animal_performance(performance_data, animal_id=101)
-```
-
-### 2. Loading from Database
+### 1. Loading from Database
 
 ```python
 from ethopy_analysis.data.loaders import get_sessions
@@ -35,7 +17,7 @@ sessions = get_sessions(animal_id=123, min_trials=20)
 fig, ax = plot_session_performance(123, sessions['session'].values)
 ```
 
-### 3. Command Line Interface
+### 2. Command Line Interface
 
 ```bash
 # Analyze specific animal
@@ -125,31 +107,6 @@ plot_trial_time(animal_id, session, trials=[10, 11])
 3. **Configure your data**:
    - Update `animal_id` variables to match your data
    - Ensure database connection is configured (see [Configuration](configuration.md))
-
-4. **Run the cells** to see analysis results
-
-## Data Requirements
-
-### Column Names
-Your DataFrame should have these columns:
-
-- `animal_id`: Animal identifier
-- `session`: Session number/identifier  
-- `correct_rate`: Success rate (0-1)
-- `trial_idx`: Trial number
-- `outcome`: Trial outcome ('correct', 'incorrect', 'timeout')
-
-### Example Data Structure
-```python
-data = pd.DataFrame({
-    'animal_id': [123, 123, 123],
-    'session': [1, 2, 3],
-    'correct_rate': [0.45, 0.52, 0.68],
-    'total_trials': [50, 55, 60],
-    'trial_idx': [1, 2, 3],
-    'outcome': ['correct', 'incorrect', 'correct']
-})
-```
 
 ## Configuration
 

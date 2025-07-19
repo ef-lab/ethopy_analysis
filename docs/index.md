@@ -1,5 +1,7 @@
 # Ethopy Analysis
 
+<img src="Ethopy_analysis_logo.png" alt="Ethopy Analysis" width="200"/>
+
 A comprehensive Python package for analyzing and visualizing behavioral data from Ethopy experiments.
 
 ## Overview
