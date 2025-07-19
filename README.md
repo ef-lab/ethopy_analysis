@@ -4,7 +4,11 @@
 [![Documentation](https://img.shields.io/badge/docs-available-brightgreen.svg)](https://ef-lab.github.io/ethopy_analysis/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+<img src="docs/Ethopy_analysis_logo.png" alt="Ethopy Analysis" width="200"/>
+
 A comprehensive Python package for analyzing and visualizing behavioral data from Ethopy experiments.
+
+👉 [Documentation](https://ef-lab.github.io/ethopy_analysis/)
 
 ## Overview
 
