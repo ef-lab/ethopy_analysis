@@ -121,21 +121,21 @@ ethopy-analysis config-summary
 
 ## Usage Examples
 
-### Basic Usage (No Configuration)
+<!-- ### Basic Usage (No Configuration)
 ```python
 from ethopy_analysis.plots.animal import plot_animal_performance
 
 # Works with defaults
 plot_animal_performance(your_dataframe)
-```
+``` -->
 
-### With Database
+<!-- ### With Database
 ```python
 from ethopy_analysis.data.loaders import load_animal_data
 
 # Uses configured database
 animal_data = load_animal_data(animal_id=123)
-```
+``` -->
 
 ### Load Specific Config
 ```python
