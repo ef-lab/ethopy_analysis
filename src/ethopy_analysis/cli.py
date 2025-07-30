@@ -5,6 +5,7 @@ Command Line Interface for Ethopy Analysis package.
 import click
 import sys
 import os
+from datetime import datetime
 
 from .plots.animal import (
     plot_session_date,
@@ -146,11 +147,20 @@ def generate_report(animal_id: int, output_dir: str):
         with open(report_file, "w") as f:
             f.write("ETHOPY ANALYSIS REPORT\n")
             f.write(f"Animal ID: {animal_id}\n")
-            f.write("Generated: {}\n".format(click.DateTime().now()))
+            f.write("Generated: {}\n".format(datetime.now())) 
             f.write("=" * 50 + "\n\n")
 
             f.write("SESSION SUMMARY\n")
             f.write(f"Total sessions: {len(sessions)}\n")
+            if get_performance(animal_id, session_row['session']) is None:
+                f.write(
+                    f"  Performance: no behavior in this session\n"
+                )
+            else:    
+                f.write(
+                    f"  Performance: {get_performance(animal_id, session_row['session']):.3f}\n"
+                )
+
             f.write(
                 f"Session range: {sessions['session'].min()} - {sessions['session'].max()}\n\n"
             )
