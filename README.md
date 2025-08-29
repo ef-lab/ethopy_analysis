@@ -16,8 +16,8 @@ Ethopy Analysis provides a modern, modular approach to behavioral data analysis 
 
 - **DataFrame-based**: Most of plotting functions work with pandas DataFrames, making them independent of data source
 - **Modular Design**: Composable functions for different analysis levels (animal, session, comparison)
-- **Database Agnostic**: Works with DataJoint databases, CSV files, or any pandas-compatible data source
-- **Extensible**: Plugin system for custom plots and analysis functions
+- **DataJoint-based**: Works with DataJoint databases and provides DataFrame interfaces
+- **Extensible**: Modular function-based architecture for easy extension
 - **Production Ready**: Command-line interface, proper packaging, and configuration management
 
 ## Installation
@@ -64,7 +64,7 @@ ethopy-analysis/
 │   │   ├── animal.py           # Animal-level plots
 │   │   ├── session.py          # Session-level plots
 │   │   ├── comparison.py       # Multi-animal/condition comparisons
-│   │   └── utils.py            # Plotting utilities and plugin system
+│   │   └── utils.py            # Plotting utilities
 │   ├── db/                     # Database connectivity
 │   │   ├── schemas.py          # Database schema management
 │   │   └── utils.py            # Database utility functions

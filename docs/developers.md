@@ -101,7 +101,7 @@ src/ethopy_analysis/
 
 **1. DataFrame-First**
 - All functions work with pandas DataFrames
-- Database-agnostic design
+- DataJoint-based data loading with DataFrame interfaces
 - Easy testing and debugging
 
 **2. Function-Based**
