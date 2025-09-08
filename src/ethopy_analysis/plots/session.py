@@ -109,7 +109,7 @@ def plot_trials(trial_df: pd.DataFrame, params: Dict[str, Any], **kwargs) -> Non
     )
 
 
-def difficultyPlot(animal_id: int, session: int, save_path=None) -> None:
+def difficultyPlot(animal_id: int, session: int, save_path=None, params=None) -> None:
     """Create a comprehensive difficulty plot for an animal session.
 
     Generates a visualization showing trial outcomes (reward, punish, abort) across
@@ -145,19 +145,26 @@ def difficultyPlot(animal_id: int, session: int, save_path=None) -> None:
     trials_beh = get_trial_behavior(animal_id, session).drop(["time"], axis=1)
     ports_selection_corr_df = pd.merge(trials_beh, correct_trials_df, how="inner")
     perf_difficulty(animal_id, session)
-    params = {
+
+    default_params = {
         "probe_colors": {
             1: [1, 0, 0],
-            2: [0, 0.5, 1],
+            2: [0.12156863, 0.46666667, 0.70588235],
             -1: [1, 0, 0],
         },  # colors for correct
         "trial_bins": 10,  # how many trials on y axis
         "range": 0.9,  # define offset range(diff is int so offset range(0,1))
         "xlim": (-2,),  # plot lims
         "ylim": (min_difficulty - 0.6,),
-        "figsize": (16, 6),
-        # **kwargs,
+        "figsize": (12, 10),
+        "marker_size": 10,
     }
+
+    if params is None:
+        params = default_params
+    else:
+        # Merge user params with defaults, user params take priority
+        params = {**default_params, **params}
 
     # create an array with colors for every correct trial based on the selected port
     clr_index_corr = np.array(
@@ -170,18 +177,21 @@ def difficultyPlot(animal_id: int, session: int, save_path=None) -> None:
     )
 
     plt.figure(figsize=params["figsize"], tight_layout=True)
-    plot_trials(correct_trials_df, params, s=10, c=clr_index_corr, label="reward")
-    plot_trials(incorrect_trials_df, params, s=10, c="black", label="punish")
-    plot_trials(missed_trials_df, params, s=1, c="black", label="abort")
+    plot_trials(correct_trials_df, params, s=params['marker_size'], c=clr_index_corr, label="reward")
+    plot_trials(incorrect_trials_df, params, s=params['marker_size'], label="punish",
+                facecolor="none", edgecolor="black", marker="o", linewidth=0.5)
+    plot_trials(missed_trials_df, params, s=params['marker_size']*0.2, c="black", label="abort")
 
-    plt.ylabel("Difficulty")
+    plt.ylabel("difficulty levels", fontsize=12)
+    plt.xlabel("trials", fontsize=12)
     plt.title(
         f"Animal:{animal_id}, Session:{session} \n\
         Reward: {len(correct_trials_df)}, Punish: {len(incorrect_trials_df)}, Abort: {len(missed_trials_df)}"
     )
     plt.ylim(params["ylim"][0])
     plt.xlim(params["xlim"][0])
-    plt.yticks(np.unique(difficulties))
+    plt.yticks(np.unique(difficulties), fontsize=10)
+    plt.xticks(fontsize=10)
     plt.box(False)
     legend_elements = [
         Line2D(
@@ -190,8 +200,9 @@ def difficultyPlot(animal_id: int, session: int, save_path=None) -> None:
             marker="o",
             color="w",
             label="punish",
-            markerfacecolor="black",
-            markersize=8,
+            markerfacecolor="none",
+            markeredgecolor="black",
+            markersize=params['marker_size'],
         ),
         Line2D(
             [0],
@@ -199,8 +210,8 @@ def difficultyPlot(animal_id: int, session: int, save_path=None) -> None:
             marker="o",
             color="w",
             label="reward (port 1)",
-            markerfacecolor="red",
-            markersize=8,
+            markerfacecolor="tab:red",
+            markersize=params['marker_size'],
         ),
         Line2D(
             [0],
@@ -208,8 +219,8 @@ def difficultyPlot(animal_id: int, session: int, save_path=None) -> None:
             marker="o",
             color="w",
             label="reward (port 2)",
-            markerfacecolor="dodgerblue",
-            markersize=8,
+            markerfacecolor="tab:blue",
+            markersize=params['marker_size'],
         ),
         Line2D(
             [0],
@@ -218,11 +229,10 @@ def difficultyPlot(animal_id: int, session: int, save_path=None) -> None:
             color="w",
             label="abort",
             markerfacecolor="black",
-            markersize=4,
+            markersize=params['marker_size']*0.5,
         ),
     ]
     plt.legend(handles=legend_elements, bbox_to_anchor=(1.04, 1), loc="upper left")
-    # plt.legend(bbox_to_anchor=(1.04, 1), loc="upper left")
 
     if save_path:
         save_plot(plt.gcf(), save_path)
@@ -333,7 +343,7 @@ def LickPlot(
 
     key_animal_session = {"animal_id": animal_id, "session": session}
     params = {
-        "port_colors": ["red", "blue"],  # set function parameters with defaults
+        "port_colors": ["tab:red", "tab:blue"],  # set function parameters with defaults
         "xlim": [-500, 10000],
         "figsize": (15, 15),
         "dotsize": 3,
@@ -437,7 +447,7 @@ def LickPlot(
                     marker="o",
                     color="w",
                     label="Reward",
-                    markerfacecolor="green",
+                    markerfacecolor="tab:green",
                     markersize=8,
                 ),
                 Line2D(
@@ -446,7 +456,7 @@ def LickPlot(
                     marker="o",
                     color="w",
                     label="Punish",
-                    markerfacecolor="red",
+                    markerfacecolor="tab:red",
                     markersize=8,
                 ),
             ]
@@ -458,7 +468,7 @@ def LickPlot(
                     marker="o",
                     color="w",
                     label="lick port 1",
-                    markerfacecolor="red",
+                    markerfacecolor="tab:red",
                     markersize=8,
                 ),
                 Line2D(

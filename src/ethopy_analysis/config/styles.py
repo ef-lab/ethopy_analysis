@@ -39,10 +39,10 @@ class Style:
         # Core settings
         self.font_size = 12
         self.title_size = 16
-        self.label_size = 14
+        self.label_size = 10
         self.tick_size = 10
-        self.legend_size = 11
-        self.font_family = "DejaVu Sans"
+        self.legend_size = 12
+        self.font_family = "Arial"
 
         # Figure settings
         self.figure_size = (10, 6)
@@ -50,15 +50,15 @@ class Style:
         self.background_color = "white"
 
         # Colors
-        self.primary_color = "#4169E1"  # Sea green
-        self.secondary_color = "#2E8B57"  # Royal blue
-        self.accent_color = "#DC143C"  # Crimson
+        self.primary_color = "#1f77b4"  # Sea green
+        self.secondary_color = "#2ca02c"  # Royal blue
+        self.accent_color = "#d62728"  # Crimson
 
         # Color palette for multiple categories
         self.color_palette = [
-            "#4169E1",
-            "#2E8B57",
-            "#DC143C",
+            "#1f77b4",
+            "#2ca02c",
+            "#d62728",
             "#FF8C00",
             "#8A2BE2",
             "#00CED1",
@@ -78,7 +78,7 @@ class Style:
 
         # Line and marker settings
         self.line_width = 2.0
-        self.marker_size = 6.0
+        self.marker_size = 10.0
 
     def apply(self):
         """Apply this style to matplotlib."""
