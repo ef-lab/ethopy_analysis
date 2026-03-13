@@ -207,6 +207,70 @@ def group_trial_hash(df: pd.DataFrame) -> pd.DataFrame:
     return unique_df
 
 
+def find_consecutive_runs(df: pd.DataFrame, col: str = "in_position") -> pd.DataFrame:
+    """Find rows that belong to consecutive runs (length > 1) in a binary column.
+
+    Groups adjacent rows with the same value in *col* and keeps only those
+    groups that contain more than one row. This is useful for identifying
+    sustained periods of ``in_position=1`` or ``in_position=0``.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing at least the column *col*.
+        col (str, optional): Binary column to analyse. Defaults to
+            ``"in_position"``.
+
+    Returns:
+        pd.DataFrame: Subset of *df* containing only rows that belong to
+            runs of length > 1. The original index is preserved.
+
+    Example:
+        >>> proximities = get_trial_proximities(animal_id, session)
+        >>> sustained = find_consecutive_runs(proximities, col="in_position")
+    """
+    group = (df[col] != df[col].shift()).cumsum()
+    return df.groupby(group).filter(lambda x: len(x) > 1)
+
+
+def add_column_by_key(
+    df_main: pd.DataFrame,
+    df_source: pd.DataFrame,
+    key_col: str,
+    value_col: Union[str, List[str]],
+    fill_value: Any = None,
+) -> pd.DataFrame:
+    """Add column(s) from *df_source* to *df_main* matched on a common key.
+
+    Args:
+        df_main (pd.DataFrame): The DataFrame to extend.
+        df_source (pd.DataFrame): Source DataFrame containing the column(s) to
+            add. Must contain *key_col* and all columns listed in *value_col*.
+        key_col (str): Name of the common key column to match on.
+        value_col (Union[str, List[str]]): Column name or list of column names
+            from *df_source* to add to *df_main*.
+        fill_value (Any, optional): Value to use when no match is found.
+            ``None`` keeps ``NaN``. Defaults to ``None``.
+
+    Returns:
+        pd.DataFrame: A copy of *df_main* with the new column(s) appended.
+
+    Example:
+        >>> outcomes = get_trial_states(animal_id, session)
+        >>> licks = get_trial_licks(animal_id, session)
+        >>> licks = add_column_by_key(licks, outcomes, "trial_idx", "state")
+    """
+    df_main = df_main.copy()
+    value_cols = [value_col] if isinstance(value_col, str) else list(value_col)
+
+    df_indexed = df_source.set_index(key_col)
+    for col in value_cols:
+        mapped = df_main[key_col].map(df_indexed[col])
+        if fill_value is not None:
+            mapped = mapped.fillna(fill_value)
+        df_main[col] = mapped
+
+    return df_main
+
+
 def convert_ms_to_time(
     time_ms: Optional[Union[int, float]],
 ) -> Optional[Dict[str, Any]]:

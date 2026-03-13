@@ -111,6 +111,51 @@ def session_summary(animal_id: int, session: int) -> None:
     print(f"Number of trials: {max(df['trial_idx'])}")
 
 
+def get_port_exit_to_lick_latency(
+    animal_id: int,
+    session: int,
+    state: str = "Trial",
+    port: int = 3,
+) -> pd.DataFrame:
+    """Calculate the time from leaving a proximity sensor to the first lick.
+
+    Measures how quickly the animal responds (licks) after moving away from
+    the center port, combining data from
+    :func:`~ethopy_analysis.data.loaders.get_first_port_exit_after_state` and
+    :func:`~ethopy_analysis.data.loaders.get_first_lick_after_state`.
+
+    Args:
+        animal_id (int): The animal identifier.
+        session (int): The session number.
+        state (str, optional): State used as the reference for both off-position
+            and first-lick searches. Defaults to ``"Trial"``.
+        port (int, optional): Proximity port monitored for the off-position
+            event. Defaults to ``3`` (center port).
+
+    Returns:
+        pd.DataFrame: One row per trial that has both an off-position event and
+            a subsequent lick. Columns: ``trial_idx``, ``state``,
+            ``state_onset``, ``off_position``, ``off_port``, ``lick``,
+            ``lick_port``, ``off_to_lick`` (time in ms from off-position to
+            first lick).
+    """
+    from .loaders import get_first_port_exit_after_state, get_first_lick_after_state
+
+    off_pos = get_first_port_exit_after_state(animal_id, session, state=state, port=port)
+    first_lick = get_first_lick_after_state(animal_id, session, state=state)
+    first_lick = first_lick.rename(columns={"ltime": "lick", "port": "lick_port"})
+
+    merged = off_pos.merge(
+        first_lick[["trial_idx", "lick", "lick_port"]],
+        on="trial_idx",
+        how="inner",
+    )
+    merged = merged.rename(columns={"port": "off_port"})
+    merged["off_to_lick"] = merged["lick"] - merged["off_position"]
+
+    return merged.reset_index(drop=True)
+
+
 def trials_per_session(animal_id: int, min_trials=2, format="df"):
     """Returns the number of trials per session
 

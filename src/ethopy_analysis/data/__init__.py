@@ -18,6 +18,14 @@ from .loaders import (
     get_session_classes,
     get_session_duration,
     get_session_task,
+    get_state_windows,
+    get_licks_per_state,
+    get_first_lick_after_state,
+    get_first_port_exit_after_state,
+    get_licks_during_proximity,
+    get_proximity_on_off_pairs,
+    get_trial_proximity_timings,
+    get_session_proximity_data,
 )
 
 # Analysis functions
@@ -25,6 +33,7 @@ from .analysis import (
     get_performance,
     session_summary,
     trials_per_session,
+    get_port_exit_to_lick_latency,
 )
 
 # Utility functions
@@ -36,6 +45,8 @@ from .utils import (
     group_by_conditions,
     group_trial_hash,
     convert_ms_to_time,
+    find_consecutive_runs,
+    add_column_by_key,
 )
 
 __all__ = [
@@ -51,10 +62,19 @@ __all__ = [
     "get_session_classes",
     "get_session_duration",
     "get_session_task",
+    "get_state_windows",
+    "get_licks_per_state",
+    "get_first_lick_after_state",
+    "get_first_port_exit_after_state",
+    "get_licks_during_proximity",
+    "get_proximity_on_off_pairs",
+    "get_trial_proximity_timings",
+    "get_session_proximity_data",
     # Analysis functions
     "get_performance",
     "session_summary",
     "trials_per_session",
+    "get_port_exit_to_lick_latency",
     # Utility functions
     "find_combination",
     "get_setup",
@@ -63,4 +83,6 @@ __all__ = [
     "group_by_conditions",
     "group_trial_hash",
     "convert_ms_to_time",
+    "find_consecutive_runs",
+    "add_column_by_key",
 ]

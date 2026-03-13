@@ -24,7 +24,8 @@ from .session import (
     liquidsPlot,
     plot_trial_time,
     plot_states_in_time,
-    plot_licks_time
+    plot_licks_time,
+    plot_trial_events_raster,
 )
 
 from .utils import validate_dataframe, create_figure
@@ -49,6 +50,7 @@ __all__ = [
     "liquidsPlot",
     "plot_states_in_time",
     "plot_licks_time",
+    "plot_trial_events_raster",
     # Utilities
     "validate_dataframe",
     "create_figure",

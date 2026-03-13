@@ -725,68 +725,6 @@ def plot_licks_state(
         plt.show()
 
 
-def plot_first_lick_after(
-    animal_id: int,
-    session: int,
-    state: str = "Response",
-    sub_state: str = "",
-    save_path=None,
-    **kwargs,
-) -> pd.DataFrame:
-    """Plot histogram of first lick times after a specific state.
-
-    Args:
-        animal_id: Unique identifier for the animal
-        session: Session number or identifier
-        state: State after which to measure first lick times
-        sub_state: Optional sub-state filter
-        **kwargs: Additional arguments passed to plt.hist()
-
-    Returns:
-        DataFrame containing first lick data
-    """
-    experiment = get_schema("experiment")
-    behavior = get_schema("behavior")
-    key_animal_session = {"animal_id": animal_id, "session": session}
-
-    Tr_key = experiment.Trial.StateOnset & key_animal_session & f"state='{state}'"
-    Lick_time = (behavior.Activity.Lick.proj(ltime="time") * (Tr_key)).proj(
-        diff_time="ltime - time"
-    )
-    f_lick = (
-        (Lick_time & "ltime>time")
-        .fetch(format="frame")
-        .reset_index()
-        .sort_values("ltime")
-        .drop_duplicates(subset=["trial_idx"])
-    )
-
-    if sub_state != "":
-        sub_select_trial = (
-            (experiment.Trial.StateOnset & key_animal_session & f"state='{sub_state}'")
-            .fetch(format="frame")
-            .reset_index()
-        )
-        bool_sub_select = np.isin(f_lick["trial_idx"], sub_select_trial["trial_idx"])
-        f_lick_select = f_lick.loc[bool_sub_select]
-    else:
-        f_lick_select = f_lick
-
-    plt.figure(figsize=(8, 5))
-    plt.title(f"Animal:{animal_id}, Session:{session}\nFirst lick after state: {state}")
-    plt.hist(f_lick_select["diff_time"], bins=100, **kwargs)
-    plt.xlabel("First Lick")
-    plt.xlabel("time (ms)")
-    plt.ylabel("#")
-
-    if save_path:
-        save_plot(plt.gcf(), save_path)
-    else:
-        plt.show()
-
-    return f_lick_select
-
-
 def find_ready_times_state(
     states_check_tr: pd.DataFrame, proximities: pd.DataFrame
 ) -> List[float]:
@@ -1228,3 +1166,173 @@ def plot_licks_time(
         save_plot(plt.gcf(), save_path)
     else:
         plt.show()
+
+
+def plot_trial_events_raster(
+    session_df: pd.DataFrame,
+    animal_id: Optional[int] = None,
+    session: Optional[int] = None,
+    align_to: str = "Trial",
+    sort_by: Optional[str] = None,
+    xlim: Tuple[int, int] = (-100, 2000),
+    figsize: Tuple[int, int] = (20, 12),
+    state_color: Optional[Dict[str, str]] = None,
+) -> Tuple[plt.Figure, plt.Axes]:
+    """Plot per-trial ON-OFF proximity, lick, and state data as a raster.
+
+    Designed to accept the output of
+    :func:`~ethopy_analysis.data.loaders.get_session_proximity_data` directly,
+    but the caller can pre-filter or modify ``session_df`` before passing it
+    in (e.g. select only rewarded trials, change column order).
+
+    Each trial is drawn as one horizontal row. The vertical axis lists trial
+    indices; the horizontal axis is time relative to the chosen alignment
+    event.
+
+    Args:
+        session_df (pd.DataFrame): One row per trial, as produced by
+            :func:`~ethopy_analysis.data.loaders.get_session_proximity_data`.
+            Required columns: ``trial_idx``, ``state_times``,
+            ``all_on_off_pairs``, ``all_lick_times``, ``main_on_time``,
+            ``main_off_time``, ``response_lick_time``, ``outcome_time``.
+        animal_id (Optional[int], optional): Used for the plot title only.
+            Defaults to ``None``.
+        session (Optional[int], optional): Used for the plot title only.
+            Defaults to ``None``.
+        align_to (str, optional): Column or state name to use as ``t=0`` for
+            each trial. Accepted values:
+
+            - ``"main_on_time"`` — last ON event during the main state
+            - ``"main_off_time"`` — last OFF event during the main state
+            - ``"response_lick_time"`` — first response lick
+            - any key present in the ``state_times`` dict (e.g. ``"Trial"``,
+              ``"Reward"``, ``"PreTrial"``)
+
+            Defaults to ``"main_on_time"``.
+        sort_by (Optional[str], optional): Column in *session_df* to sort
+            trials by (ascending). ``None`` preserves ``trial_idx`` order.
+            Common choices: ``"main_on_off_dur"``, ``"reaction_time"``.
+            Defaults to ``None``.
+        xlim (Tuple[int, int], optional): X-axis limits in ms. Defaults to
+            ``(-100, 2000)``.
+        figsize (Tuple[int, int], optional): Figure size as ``(width, height)``
+            in inches. Defaults to ``(20, 12)``.
+        state_color (Optional[Dict[str, str]], optional): Mapping of state
+            name to colour string. If ``None``, a default palette is used.
+            Defaults to ``None``.
+
+    Returns:
+        Tuple[plt.Figure, plt.Axes]: The matplotlib figure and axes objects.
+
+    Note:
+        Trials whose alignment reference is ``NaN`` (e.g. no lick detected for
+        ``align_to="response_lick_time"``) are silently skipped. The number of
+        skipped trials is printed as a warning.
+    """
+    if state_color is None:
+        state_color = {
+            "PreTrial": "purple",
+            "Trial": "blue",
+            "Abort": "black",
+            "InterTrial": "orange",
+            "Punish": "darkred",
+            "Reward": "darkgreen",
+            "Offtime": "grey",
+            "Hydrate": "yellow",
+        }
+
+    df = session_df.copy()
+
+    if align_to in df.columns.tolist():
+        df["ref_time"] = df[align_to]
+    else:
+        df["ref_time"] = df["state_times"].apply(lambda d: d.get(align_to))
+
+    skipped = df[df["ref_time"].isna()]["trial_idx"].tolist()
+    df = df.dropna(subset=["ref_time"]).reset_index(drop=True)
+
+    if sort_by is not None and sort_by in df.columns:
+        df = df.sort_values(sort_by, na_position="last").reset_index(drop=True)
+
+    trial_list = df["trial_idx"].tolist()
+    pos_map = {trl: i for i, trl in enumerate(trial_list)}
+
+    fig, ax = plt.subplots(figsize=figsize)
+    seen_labels: set = set()
+
+    def _scatter(x, y, color, label, marker=".", s=20):
+        if not len(x):
+            return
+        lbl = label if label not in seen_labels else "_nolegend_"
+        seen_labels.add(label)
+        ax.scatter(x, y, s=s, alpha=0.7, color=color, marker=marker, label=lbl, zorder=3)
+
+    def _span(x0, x1, ypos, color, label, alpha=0.25):
+        lbl = label if label not in seen_labels else "_nolegend_"
+        seen_labels.add(label)
+        ax.fill_betweenx(
+            [ypos - 0.45, ypos + 0.45], x0, x1,
+            alpha=alpha, color=color, zorder=2, label=lbl,
+        )
+
+    for _, row in df.iterrows():
+        trl = row["trial_idx"]
+        ref = row["ref_time"]
+        ypos = pos_map[trl]
+
+        on_t, off_t = [], []
+        for pair in row["all_on_off_pairs"]:
+            t_on = pair["time_on"] - ref
+            t_off = pair["time_off"] - ref
+            _span(t_on, t_off, ypos, color="grey", label="In sensor")
+            on_t.append(t_on)
+            off_t.append(t_off)
+
+        _scatter(np.array(on_t), np.full(len(on_t), ypos), "green", "ON")
+        _scatter(np.array(off_t), np.full(len(off_t), ypos), "red", "OFF")
+
+        lick_t = np.array(row["all_lick_times"]) - ref
+        _scatter(lick_t, np.full(len(lick_t), ypos), "green", "Lick", marker="x")
+
+        if row["response_lick_time"] is not None:
+            ml = row["response_lick_time"] - ref
+            lbl = "Response lick" if "Response lick" not in seen_labels else "_nolegend_"
+            seen_labels.add("Response lick")
+            ax.scatter([ml], [ypos], s=50, color="green", marker="*",
+                       label=lbl, zorder=5, alpha=0.9)
+
+        for st, st_abs in row["state_times"].items():
+            if st not in state_color:
+                continue
+            st_t = st_abs - ref
+            lbl = st if st not in seen_labels else "_nolegend_"
+            seen_labels.add(st)
+            ax.scatter(st_t, ypos, s=7, alpha=1, color=state_color[st],
+                       marker=">", label=lbl, zorder=3)
+
+            if st in ("Reward", "Punish", "Abort") and off_t:
+                valid = [x for x in off_t if x <= st_t]
+                if valid:
+                    _span(valid[-1], st_t, ypos, color=state_color[st], label=st + " period")
+
+    ax.axvline(0, color="black", linewidth=1, linestyle=":", alpha=0.6, zorder=4)
+
+    ax.set_yticks(range(len(trial_list)))
+    ax.set_yticklabels(trial_list, fontsize=8)
+    ax.set_ylim(-1, len(trial_list))
+    ax.set_xlim(*xlim)
+    ax.set_xticks(np.arange(xlim[0], xlim[1] + 50, 50))
+    ax.grid(zorder=1)
+
+    sort_label = f"  |  sorted by: {sort_by}" if sort_by else ""
+    id_label = f"Animal {animal_id}  —  Session {session}  —  " if animal_id else ""
+    fig.suptitle("Centerport On-Off & State timing", fontsize=20, weight="bold")
+    ax.set_title(f"{id_label}aligned to: {align_to}{sort_label}", fontsize=13)
+    ax.set_xlabel("Time (ms)", fontsize=20, weight="bold")
+    ax.set_ylabel("Trial Index", fontsize=20, weight="bold")
+    ax.legend(loc="upper right", bbox_to_anchor=(1.15, 0.9), fontsize=17)
+
+    if skipped:
+        print(f"Warning: {len(skipped)} trial(s) skipped (no '{align_to}'): {skipped}")
+
+    return fig, ax
