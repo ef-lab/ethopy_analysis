@@ -5,6 +5,7 @@ This module handles loading and managing configuration from various sources
 including JSON files, environment variables, and default settings.
 """
 
+import copy
 import json
 import os
 import logging
@@ -29,51 +30,26 @@ DEFAULT_CONFIG = {
 }
 
 
-def load_config(config_path: Optional[Union[str, Path]] = None, display_path: Optional[bool] = None) -> Dict[str, Any]:
+def load_config(
+    config_path: Optional[Union[str, Path]] = None,
+    display_path: bool = False,
+) -> Dict[str, Any]:
     """Load configuration from file or use defaults.
 
     Args:
         config_path: Path to configuration file (optional)
-        display_path: Whether to display the config path (optional)
+        display_path: Print the resolved config file path to stdout. Defaults to False.
 
     Returns:
         Configuration dictionary
     """
-    # Start with default configuration
-    config = DEFAULT_CONFIG.copy()
+    config, config_source = load_config_with_source(config_path)
 
-    # Try to load from file
-    if config_path:
-        config_file = Path(config_path)
-    else:
-        # Search for config file in common locations
-        config_file = find_config_file()
-
-    if config_file and config_file.exists():
-        try:
-            with open(config_file, "r") as f:
-                file_config = json.load(f)
-            # Merge file config with defaults
-            config = merge_configs(config, file_config)
-            if display_path:
-                print(f"Configuration loaded from: {config_file}")
-            logger.info(f"Loaded configuration from: {config_file}")
-
-        except Exception as e:
-            logger.warning(f"Failed to load config from {config_file}: {e}")
-            logger.info("Using default configuration")
-    else:
-        logger.info("No config file found, using defaults")
-
-    # Override with environment variables
-    config = apply_env_overrides(config)
-
-    # Validate the final configuration
-    if not validate_config(config):
-        logger.warning(
-            "Configuration validation failed. The configuration may have issues. "
-            "Check the logs above for specific problems."
-        )
+    if display_path and config_source:
+        if config_source.name == "local_conf.json":
+            print(f"Configuration loaded from ethopy local_conf: {config_source}")
+        else:
+            print(f"Configuration loaded from: {config_source}")
 
     return config
 
@@ -81,16 +57,19 @@ def load_config(config_path: Optional[Union[str, Path]] = None, display_path: Op
 def find_config_file() -> Optional[Path]:
     """Find configuration file in common locations.
 
+    Searches for ethopy_analysis config files first, then falls back to the
+    ethopy package's ``~/.ethopy/local_conf.json``.
+
     Returns:
         Path to config file if found, None otherwise
     """
-    # Common config file names and locations
+    # ethopy_analysis config files (highest priority)
     config_names = ["ethopy_config.json", "config.json", "dj_conf.json"]
     search_paths = [
-        Path.cwd(),  # Current directory
-        Path.cwd() / "config",  # Config subdirectory
-        Path.home() / ".ethopy",  # User home directory
-        Path(__file__).parent.parent.parent.parent,  # Package root
+        Path.cwd(),
+        Path.cwd() / "config",
+        Path.home() / ".ethopy",
+        Path(__file__).parent.parent.parent.parent,
     ]
 
     for path in search_paths:
@@ -100,7 +79,70 @@ def find_config_file() -> Optional[Path]:
                 logger.debug(f"Found config file: {config_file}")
                 return config_file
 
+    # Fallback: ethopy package local_conf.json
+    ethopy_conf = Path.home() / ".ethopy" / "local_conf.json"
+    if ethopy_conf.exists():
+        logger.debug(f"Found ethopy local_conf: {ethopy_conf}")
+        return ethopy_conf
+
     return None
+
+
+def _is_ethopy_local_conf(config: Dict[str, Any]) -> bool:
+    """Return True if *config* is in ethopy ``local_conf.json`` format.
+
+    The ethopy format is identified by the presence of a ``dj_local_conf``
+    top-level key that stores DataJoint settings with dot-notation sub-keys
+    (e.g. ``"database.host"``).
+
+    Args:
+        config: Parsed JSON dictionary to inspect.
+
+    Returns:
+        True if the dictionary uses the ethopy local_conf format.
+    """
+    return "dj_local_conf" in config
+
+
+def _parse_ethopy_local_conf(ethopy_config: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert an ethopy ``local_conf.json`` dict to ethopy_analysis config format.
+
+    Ethopy stores database credentials under ``dj_local_conf`` using dot-notation
+    keys (``"database.host"``, ``"database.user"``, etc.) and schema names under
+    the ``SCHEMATA`` key.  This function maps them to the ethopy_analysis
+    ``database`` structure.
+
+    Args:
+        ethopy_config: Dictionary loaded from ``~/.ethopy/local_conf.json``.
+
+    Returns:
+        Dictionary in the standard ethopy_analysis config format with a
+        ``"database"`` top-level key.
+    """
+    dj_conf = ethopy_config.get("dj_local_conf", {})
+    schemata = ethopy_config.get("SCHEMATA", {})
+
+    default_schemas = DEFAULT_CONFIG["database"]["schemas"]
+    schemas = {
+        "experiment": schemata.get("experiment", default_schemas["experiment"]),
+        "behavior": schemata.get("behavior", default_schemas["behavior"]),
+        "stimulus": schemata.get("stimulus", default_schemas["stimulus"]),
+    }
+
+    host = dj_conf.get("database.host", "")
+    port = dj_conf.get("database.port", 3306)
+    # Append port to host if not already included (ethopy stores them separately)
+    if host and ":" not in str(host):
+        host = f"{host}:{port}"
+
+    return {
+        "database": {
+            "host": host,
+            "user": dj_conf.get("database.user", ""),
+            "password": dj_conf.get("database.password", ""),
+            "schemas": schemas,
+        }
+    }
 
 
 def merge_configs(
@@ -269,8 +311,8 @@ def load_config_with_source(config_path: Optional[Union[str, Path]] = None) -> t
     Returns:
         Tuple of (configuration dictionary, source file path or None)
     """
-    # Start with default configuration
-    config = DEFAULT_CONFIG.copy()
+    # Start with a deep copy so mutations never bleed into DEFAULT_CONFIG
+    config = copy.deepcopy(DEFAULT_CONFIG)
     config_source = None
 
     # Try to load from file
@@ -284,7 +326,12 @@ def load_config_with_source(config_path: Optional[Union[str, Path]] = None) -> t
         try:
             with open(config_file, "r") as f:
                 file_config = json.load(f)
-            # Merge file config with defaults
+
+            # Detect and convert ethopy local_conf.json format
+            if _is_ethopy_local_conf(file_config):
+                logger.info("Detected ethopy local_conf.json format — converting")
+                file_config = _parse_ethopy_local_conf(file_config)
+
             config = merge_configs(config, file_config)
             config_source = config_file
             logger.info(f"Loaded configuration from: {config_file}")
@@ -318,7 +365,10 @@ def get_config_summary() -> str:
 
     # Configuration source
     if config_source:
-        summary += f"Configuration file: {config_source}\n"
+        if config_source.name == "local_conf.json":
+            summary += f"Configuration file: {config_source} (ethopy local_conf)\n"
+        else:
+            summary += f"Configuration file: {config_source}\n"
     else:
         summary += "Configuration file: Using defaults (no file found)\n"
     
