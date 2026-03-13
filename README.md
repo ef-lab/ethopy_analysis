@@ -56,65 +56,55 @@ pip install -e .
 ```
 ethopy-analysis/
 ├── src/ethopy_analysis/
-│   ├── data/                   # Data loading and processing
-│   │   ├── loaders.py          # Main data loading functions
-│   │   ├── analysis.py         # Data analysis functions
-│   │   └── utils.py            # Data processing utilities
-│   ├── plots/                  # Plotting functions (DataFrame-based)
-│   │   ├── animal.py           # Animal-level plots
-│   │   ├── session.py          # Session-level plots
-│   │   ├── comparison.py       # Multi-animal/condition comparisons
-│   │   └── utils.py            # Plotting utilities
-│   ├── db/                     # Database connectivity
-│   │   ├── schemas.py          # Database schema management
-│   │   └── utils.py            # Database utility functions
-│   ├── config/                 # Configuration management
-│   │   └── settings.py         # Configuration loading and validation
-│   └── cli.py                  # Command-line interface
-├── examples/                   # Example notebooks and scripts
-│   ├── load_example.ipynb
-│   ├── animal_analysis_example.ipynb
-│   └── session_analysis_example.ipynb
-├── pyproject.toml              # Package configuration
+│   ├── data/                        # Data loading and processing
+│   │   ├── loaders.py               # DB loaders: sessions, trials, states,
+│   │   │                            #   licks, proximity, state windows,
+│   │   │                            #   ON-OFF pairs, per-trial raster data
+│   │   ├── analysis.py              # Derived metrics: performance,
+│   │   │                            #   port-exit-to-lick latency, summaries
+│   │   └── utils.py                 # Utilities: consecutive runs,
+│   │                                #   column mapping, group helpers
+│   ├── plots/                       # Plotting functions (DataFrame-based)
+│   │   ├── animal.py                # Animal-level plots across sessions
+│   │   ├── session.py               # Session-level plots: licks, proximity,
+│   │   │                            #   states, trial-events raster
+│   │   ├── comparison.py            # Multi-animal/condition comparisons
+│   │   └── utils.py                 # Plotting utilities
+│   ├── db/                          # Database connectivity
+│   │   └── schemas.py               # DataJoint schema management and caching
+│   ├── config/                      # Configuration management
+│   │   ├── settings.py              # Config loading: ethopy_config.json,
+│   │   │                            #   dj_conf.json, EthoPy local_conf.json,
+│   │   │                            #   and environment variables
+│   │   ├── styles.py                # Plot style presets
+│   │   └── interactive.py           # Interactive credential prompts
+│   └── cli.py                       # Command-line interface
+├── examples/                        # Example notebooks
+│   ├── load_example.ipynb           # Data loading walkthrough
+│   ├── animal_analysis_example.ipynb # Animal-level analysis
+│   └── session_analysis_example.ipynb # Session-level analysis incl.
+│                                    #   proximity, state windows, raster plot
+├── docs/                            # Documentation
+├── pyproject.toml                   # Package configuration
 └── README.md
 ```
 
 ## Configuration
 
-### Database Setup
+### Already using EthoPy?
 
-Create a configuration file for database access:
+If EthoPy is installed, ethopy-analysis automatically reads `~/.ethopy/local_conf.json` —
+no extra setup needed.
 
-```bash
-ethopy-analysis create-config --output-path config.json
-```
+### Other options
 
-Edit the configuration file:
+| Method | How |
+|--------|-----|
+| Config file | Create `ethopy_config.json` in the project root (see [docs/configuration.md](docs/configuration.md)) |
+| Environment variables | `export DJ_HOST=… DJ_USER=… DJ_PASSWORD=…` |
+| Interactive | Run any loader — credentials are prompted if nothing else is found |
 
-```json
-{
-  "database": {
-    "host": "your-database.org:3306",
-    "user": "your_username",
-    "password": "your_password",
-    "schemas": {
-      "experiment": "lab_experiments",
-      "stimulus": "lab_stimuli",
-      "behavior": "lab_behavior"
-    }
-  }
-}
-```
-
-### Environment Variables
-
-Alternatively, use environment variables:
-
-```bash
-export DJ_HOST="database.example.org:3306"
-export DJ_USER="your_username"
-export DJ_PASSWORD="your_password"
-```
+See [docs/configuration.md](docs/configuration.md) for the full priority order and format reference.
 
 ## Examples and Tutorials
 
