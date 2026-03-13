@@ -16,7 +16,6 @@ from .session import (
     difficultyPlot,
     LickPlot,
     plot_licks_state,
-    plot_first_lick_after,
     valid_ready_state,
     plot_valid_proximity_state,
     plot_proximities_dur,
