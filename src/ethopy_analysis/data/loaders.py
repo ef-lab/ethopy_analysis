@@ -222,7 +222,7 @@ def get_trial_stimulus(
 
     if stim_class is None:
         stim_class_name = combined_df["stimulus_class"].values[0]
-        if stim_class_name == 'PandaShowBase':
+        if 'Panda' in stim_class_name:
             stim_class_name = 'Panda'
         try:
             stim_conds = getattr(stimulus, stim_class_name)
