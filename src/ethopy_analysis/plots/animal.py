@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -142,7 +142,7 @@ def plot_performance_liquid(
         save_plot(fig, save_path)
 
 
-def find_uniq_pos(arr: List) -> tuple[List, List[int]]:
+def find_uniq_pos(arr: List) -> Tuple[List, List[int]]:
     """Find unique values and their starting positions in a list.
 
     Helper function that identifies unique consecutive values in a list
