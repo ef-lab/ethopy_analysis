@@ -10,7 +10,7 @@ import json
 import os
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -302,7 +302,9 @@ def validate_config(config: Dict[str, Any]) -> bool:
     return is_valid
 
 
-def load_config_with_source(config_path: Optional[Union[str, Path]] = None) -> tuple[Dict[str, Any], Optional[Path]]:
+def load_config_with_source(
+    config_path: Optional[Union[str, Path]] = None,
+) -> Tuple[Dict[str, Any], Optional[Path]]:
     """Load configuration and return both config and source file path.
 
     Args:
