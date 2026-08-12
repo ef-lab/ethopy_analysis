@@ -313,6 +313,14 @@ def _setup_database_connection(
     dj.config["database.host"] = db_params["host"]
     dj.config["database.user"] = db_params["user"]
     dj.config["database.password"] = db_params["password"]
+    # Control TLS for the DB connection. Default False = never request SSL,
+    # which avoids "SSL is required but the server doesn't support it" errors
+    # against servers without TLS. NOTE: with this DataJoint version, use_tls
+    # of None/True both add an SSL param and the no-SSL fallback only catches
+    # InternalError (not the OperationalError 2026 raised here), so False is the
+    # only reliable value for non-TLS servers. Override via the "use_tls" key in
+    # the database config (set to True or a dict to require/configure TLS).
+    dj.config["database.use_tls"] = db_config.get("use_tls", False)
     logger.info("DataJoint configuration completed")
 
     # Create schema virtual modules
