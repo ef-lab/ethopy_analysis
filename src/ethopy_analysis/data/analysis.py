@@ -5,6 +5,7 @@ This module provides functions to analyze behavioral data,
 calculate performance metrics, and generate session summaries.
 """
 
+import os
 from typing import List, Optional, Union, Any
 import pandas as pd
 import numpy as np
@@ -83,10 +84,16 @@ def session_summary(animal_id: int, session: int) -> None:
         - User name and setup information
         - Session start time and duration
         - Experiment, stimulus, and behavior classes
-        - Task filename and git hash
+        - Task filename and the code version records for the session
         - Session performance and number of trials
     """
-    from .loaders import get_session_classes, get_session_duration, get_session_task, get_trial_states
+    from .loaders import (
+        get_session_classes,
+        get_session_duration,
+        get_session_task,
+        get_session_version,
+        get_trial_states,
+    )
     
     session_classes = get_session_classes(animal_id, session)
     print(f"Animal id: {animal_id}, session: {session}")
@@ -100,10 +107,19 @@ def session_summary(animal_id: int, session: int) -> None:
     print("Stimulus: ", session_classes["stimulus_class"].values[0])
     print("Behavior: ", session_classes["behavior_class"].values[0])
 
-    filename, git_hash = get_session_task(animal_id, session, save_file=False)
+    filename = get_session_task(animal_id, session, save_file=False)
     print()
     print(f"Task filename: {filename}")
-    print(f"Git hash: {git_hash}")
+
+    versions = get_session_version(animal_id, session)
+    if versions.empty:
+        print("Code version: not recorded for this session")
+    else:
+        print("Code version:")
+        for _, row in versions.iterrows():
+            project = row["project_path"]
+            dirty = " (uncommitted changes)" if row["is_dirty"] else ""
+            print(f"  {project}: {row['version']} [{row['source_type']}]{dirty}")
 
     df = get_trial_states(animal_id, session)
     print()
